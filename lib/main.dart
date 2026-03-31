@@ -55,7 +55,7 @@ class _SimCardDashboardState extends State<SimCardDashboard> {
   @override
   void initState() {
     super.initState();
-    SimCardManager.clearCache();
+    // Le clearCache est maintenant appelé directement à chaque fois dans _loadAllInformation
     _loadAllInformation();
   }
 
@@ -69,12 +69,14 @@ class _SimCardDashboardState extends State<SimCardDashboard> {
   }
 
   Future<void> _loadAllInformation() async {
-    // N'affiche le loader plein écran que lors du tout premier chargement
-    if (_allSimInfo.isEmpty && _errorMessage == null) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
+    // 1. On vide le cache à chaque appel pour forcer la lecture matérielle
+    SimCardManager.clearCache();
+
+    // 2. On affiche l'indicateur de chargement central à chaque rafraîchissement
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null; // On réinitialise l'erreur éventuelle
+    });
 
     await requestPermissions();
 
@@ -100,7 +102,6 @@ class _SimCardDashboardState extends State<SimCardDashboard> {
           _simCount = results[6] as int;
 
           _isLoading = false;
-          _errorMessage = null; // Réinitialise l'erreur en cas de succès
         });
       }
     } catch (e) {
